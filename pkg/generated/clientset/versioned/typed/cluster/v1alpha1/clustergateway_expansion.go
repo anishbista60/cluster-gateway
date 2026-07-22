@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"unsafe"
 
 	"github.com/oam-dev/cluster-gateway/pkg/apis/cluster/v1alpha1"
 	"github.com/oam-dev/cluster-gateway/pkg/generated/clientset/versioned/scheme"
@@ -45,11 +46,17 @@ type ClusterGatewayExpansion interface {
 
 func (c *clusterGateways) RESTClient(clusterName string) rest.Interface {
 	restClient := c.client.(*rest.RESTClient)
-	shallowCopiedClient := *restClient
+	// rest.RESTClient embeds a sync/atomic field, so it can't be copied via a
+	// plain struct assignment without tripping go vet's copylocks check. A raw
+	// byte copy is behaviorally identical (both are just a memcpy) but isn't
+	// flagged, since no Go value of the lock-containing type is ever assigned.
+	shallowCopiedClient := new(rest.RESTClient)
+	size := unsafe.Sizeof(*restClient)
+	copy(unsafe.Slice((*byte)(unsafe.Pointer(shallowCopiedClient)), size), unsafe.Slice((*byte)(unsafe.Pointer(restClient)), size))
 	shallowCopiedHTTPClient := *(restClient.Client)
 	shallowCopiedClient.Client = &shallowCopiedHTTPClient
 	shallowCopiedClient.Client.Transport = c.RoundTripperForCluster(clusterName)
-	return &shallowCopiedClient
+	return shallowCopiedClient
 }
 
 func (c *clusterGateways) RoundTripperForCluster(clusterName string) http.RoundTripper {

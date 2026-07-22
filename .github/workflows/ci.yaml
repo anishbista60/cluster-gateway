@@ -11,9 +11,9 @@ on:
 
 env:
   # Common versions
-  GO_VERSION: '1.23'
+  GO_VERSION: '1.26.0'
   GOLANGCI_VERSION: 'v1.56'
-  KIND_VERSION: 'v0.29.0'
+  KIND_VERSION: 'v0.32.0'
 
 jobs:
 
@@ -57,7 +57,7 @@ jobs:
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           
           # Setup the test environment with the correct Kubernetes version
-          export KUBEBUILDER_ASSETS=$(setup-envtest use 1.31.x --print path --bin-dir ~/.local/bin)
+          export KUBEBUILDER_ASSETS=$(setup-envtest use 1.35.x --print path --bin-dir ~/.local/bin)
           echo "KUBEBUILDER_ASSETS=$KUBEBUILDER_ASSETS" >> $GITHUB_ENV
           
           # Verify the setup
@@ -99,8 +99,8 @@ jobs:
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.2.0
         with:
-          version: v0.29.0
-          node_image: kindest/node:v1.31.9
+          version: v0.32.0
+          node_image: kindest/node:v1.35.5
       - name: Build Image
         run: |
           make image
@@ -144,8 +144,8 @@ jobs:
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.2.0
         with:
-          version: v0.29.0
-          node_image: kindest/node:v1.31.9
+          version: v0.32.0
+          node_image: kindest/node:v1.35.5
       - name: Prepare OCM testing environment
         run: |
           clusteradm init --output-join-command-file join.sh --wait
