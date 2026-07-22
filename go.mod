@@ -1,6 +1,6 @@
 module github.com/oam-dev/cluster-gateway
 
-go 1.26.0
+go 1.25.12
 
 require (
 	github.com/ghodss/yaml v1.0.0
@@ -131,5 +131,5 @@ require (
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.100.2
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.36
-	sigs.k8s.io/apiserver-runtime => github.com/anishbista60/apiserver-runtime v1.1.2-0.20260722123624-38ed2f9bdeb6
+	sigs.k8s.io/apiserver-runtime => github.com/anishbista60/apiserver-runtime v1.1.2-0.20260723054845-6136a39ae5bb
 )
