@@ -99,8 +99,9 @@ func InitLoopbackClient(ctx server.PostStartHookContext) error {
 			klog.Infof("OCM ManagedCluster CRD not installed, skip bootstrapping informer for OCM ManagedCluster")
 		} else if err := setOCMClusterInformer(ocmClient, ctx.Done()); err != nil {
 			return err
+		} else {
+			clusterControl = clusterutil.NewCacheOCMClusterControl(clusterLister)
 		}
-		clusterControl = clusterutil.NewCacheOCMClusterControl(clusterLister)
 	}
 	if clusterControl == nil {
 		clusterControl = clusterutil.NewDirectOCMClusterControl(ocmClient)
