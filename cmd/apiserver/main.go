@@ -34,6 +34,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericfilters "k8s.io/apiserver/pkg/server/filters"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	basecompatibility "k8s.io/component-base/compatibility"
 	baseversion "k8s.io/component-base/version"
 	"k8s.io/klog/v2"
@@ -112,6 +113,7 @@ func newCommand() *cobra.Command {
 
 	flags := cmd.Flags()
 	o.AddFlags(flags)
+	utilfeature.DefaultMutableFeatureGate.AddFlag(flags)
 	flags.BoolVar(&standaloneDebugMode, "standalone-debug-mode", false,
 		"Under the local-debug mode the apiserver will allow all access to its resources without "+
 			"authorizing the requests, this flag is only intended for debugging in your workstation "+
