@@ -11,15 +11,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"sigs.k8s.io/apiserver-runtime/pkg/builder/resource"
-	contextutil "sigs.k8s.io/apiserver-runtime/pkg/util/context"
 )
 
-var _ resource.ArbitrarySubResource = &ClusterGatewayHealth{}
 var _ rest.Getter = &ClusterGatewayHealth{}
 var _ rest.Updater = &ClusterGatewayHealth{}
 
 type ClusterGatewayHealth ClusterGateway
+
+// clusterGatewayParentStorage is the storage used to resolve the parent
+// ClusterGateway for the health subresource. Wired once from
+// cmd/apiserver/main.go when the storage map is built.
+var clusterGatewayParentStorage rest.Getter
+
+// SetClusterGatewayParentStorage wires the parent ClusterGateway storage.
+func SetClusterGatewayParentStorage(parent rest.Getter) {
+	clusterGatewayParentStorage = parent
+}
 
 func (in *ClusterGatewayHealth) New() runtime.Object {
 	return &ClusterGateway{}
@@ -32,11 +39,10 @@ func (in *ClusterGatewayHealth) SubResourceName() string {
 func (in *ClusterGatewayHealth) Destroy() {}
 
 func (in *ClusterGatewayHealth) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	parentStorage, ok := contextutil.GetParentStorageGetter(ctx)
-	if !ok {
+	if clusterGatewayParentStorage == nil {
 		return nil, fmt.Errorf("no parent storage found")
 	}
-	parentObj, err := parentStorage.Get(ctx, name, options)
+	parentObj, err := clusterGatewayParentStorage.Get(ctx, name, options)
 	if err != nil {
 		return nil, fmt.Errorf("no such cluster %v", name)
 	}
