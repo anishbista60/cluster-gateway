@@ -1,6 +1,6 @@
 module github.com/oam-dev/cluster-gateway
 
-go 1.25.12
+go 1.25.13
 
 require (
 	github.com/ghodss/yaml v1.0.0
