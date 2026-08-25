@@ -171,16 +171,19 @@ func runServer(ctx context.Context, o *genericoptions.RecommendedOptions) error 
 		return genericfilters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString())(r, requestInfo)
 	}
 
-	if err := o.ApplyTo(serverConfig); err != nil {
-		return err
-	}
-
+	// Must be set before o.ApplyTo: it wires authentication security
+	// definitions into OpenAPIConfig only if already non-nil at that point.
 	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "Cluster Gateway"
 	serverConfig.OpenAPIConfig.Info.Version = "1.0.0"
 	serverConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
 	serverConfig.OpenAPIV3Config.Info.Title = "Cluster Gateway"
 	serverConfig.OpenAPIV3Config.Info.Version = "1.0.0"
+
+	if err := o.ApplyTo(serverConfig); err != nil {
+		return err
+	}
+
 	config.WithUserAgent(serverConfig)
 
 	genericServer, err := serverConfig.Complete().New("cluster-gateway", genericapiserver.NewEmptyDelegate())
@@ -191,8 +194,7 @@ func runServer(ctx context.Context, o *genericoptions.RecommendedOptions) error 
 
 	clusterGatewayStorage := &clusterv1alpha1.ClusterGateway{}
 	proxyStorage := &clusterv1alpha1.ClusterGatewayProxy{Parent: clusterGatewayStorage}
-	healthStorage := &clusterv1alpha1.ClusterGatewayHealth{}
-	clusterv1alpha1.SetClusterGatewayParentStorage(clusterGatewayStorage)
+	healthStorage := &clusterv1alpha1.ClusterGatewayHealth{Parent: clusterGatewayStorage}
 
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(config.MetaApiGroupName, scheme.Scheme, parameterCodec, codecs)
 	apiGroupInfo.VersionedResourcesStorageMap[config.MetaApiVersionName] = map[string]rest.Storage{

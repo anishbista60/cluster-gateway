@@ -16,16 +16,18 @@ import (
 var _ rest.Getter = &ClusterGatewayHealth{}
 var _ rest.Updater = &ClusterGatewayHealth{}
 
-type ClusterGatewayHealth ClusterGateway
+// ClusterGatewayHealth is a subresource for ClusterGateway which allows
+// updating and reading the health status of the managed cluster.
+type ClusterGatewayHealth struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
 
-// clusterGatewayParentStorage is the storage used to resolve the parent
-// ClusterGateway for the health subresource. Wired once from
-// cmd/apiserver/main.go when the storage map is built.
-var clusterGatewayParentStorage rest.Getter
+	Spec   ClusterGatewaySpec
+	Status ClusterGatewayStatus
 
-// SetClusterGatewayParentStorage wires the parent ClusterGateway storage.
-func SetClusterGatewayParentStorage(parent rest.Getter) {
-	clusterGatewayParentStorage = parent
+	// Parent is the storage of the parent ClusterGateway resource, used to
+	// resolve the target cluster for the health subresource.
+	Parent rest.Getter
 }
 
 func (in *ClusterGatewayHealth) New() runtime.Object {
@@ -39,10 +41,10 @@ func (in *ClusterGatewayHealth) SubResourceName() string {
 func (in *ClusterGatewayHealth) Destroy() {}
 
 func (in *ClusterGatewayHealth) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	if clusterGatewayParentStorage == nil {
+	if in.Parent == nil {
 		return nil, fmt.Errorf("no parent storage found")
 	}
-	parentObj, err := clusterGatewayParentStorage.Get(ctx, name, options)
+	parentObj, err := in.Parent.Get(ctx, name, options)
 	if err != nil {
 		return nil, fmt.Errorf("no such cluster %v", name)
 	}
